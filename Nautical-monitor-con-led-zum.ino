@@ -1,11 +1,11 @@
 /*
  * Nautical Arduino Monitor - Hernzum
- * Versión: 1.4
+ * Versión: 1.6
  * Descripción:
  * - Monitorea baterías con divisores de voltaje y calibración individual.
  * - Cada batería tiene su propio voltaje máximo y mínimo para calcular el SOC.
  * - Mide temperatura, humedad y nivel del tanque de agua.
- * - Mide el consumo de corriente mediante un shunt en la batería 1.
+ * - Mide el consumo de corriente mediante un shunt de 300A/75mV en la batería 1.
  * - Genera alarmas con LEDs y buzzer en caso de fallas críticas.
  * - Envía datos a SignalK en formato JSON por UART (115200 baud).
  */
@@ -50,7 +50,7 @@ const float R2 = 80000.0;
 const float VOLTAGE_DIVIDER_RATIO = (R1 + R2) / R2;
 
 // =========================== CONFIGURACIÓN DEL SHUNT ===========================
-const float SHUNT_RESISTANCE = 0.00075;  // Ejemplo: 75mV @ 100A → 0.00075Ω
+const float SHUNT_RESISTANCE = 0.00025; // 300A/75mV → 0.00025Ω
 const float SHUNT_CALIBRATION = 1.0;    // Factor de calibración para ajustar la lectura
 
 // Configuración del sensor DHT
@@ -88,6 +88,12 @@ float readCurrent() {
   return current;
 }
 
+// 🔹 Leer temperatura y humedad
+void readEnvironment(float &temperature, float &humidity) {
+  temperature = dht.readTemperature();
+  humidity = dht.readHumidity();
+}
+
 // ========================= ENVÍO DE DATOS A SIGNALK =========================
 
 // 🔹 Enviar datos de baterías en JSON
@@ -118,4 +124,85 @@ void sendBatteryData() {
   Serial.println();
 }
 
-// 🔹 Enviar datos del
+// 🔹 Enviar datos del tanque de agua en JSON
+void sendWaterTankData() {
+  StaticJsonDocument<256> doc;
+  JsonArray updates = doc.createNestedArray("updates");
+  JsonObject update = updates.createNestedObject();
+  JsonObject source = update.createNestedObject("source");
+
+  source["label"] = "arduino-mini";
+  source["type"] = "sensor";
+  update["timestamp"] = millis();
+  JsonArray values = update.createNestedArray("values");
+
+  JsonObject waterObj = values.createNestedObject();
+  waterObj["path"] = "tanks.freshWater.0.currentLevel";
+  waterObj["value"] = readWaterLevel();
+
+  serializeJson(doc, Serial);
+  Serial.println();
+}
+
+// 🔹 Enviar datos del shunt en JSON (corriente en batería 1)
+void sendCurrentData() {
+  StaticJsonDocument<256> doc;
+  JsonArray updates = doc.createNestedArray("updates");
+  JsonObject update = updates.createNestedObject();
+  JsonObject source = update.createNestedObject("source");
+
+  source["label"] = "arduino-mini";
+  source["type"] = "sensor";
+  update["timestamp"] = millis();
+  JsonArray values = update.createNestedArray("values");
+
+  JsonObject currentObj = values.createNestedObject();
+  currentObj["path"] = "electrical.batteries.0.current";
+  currentObj["value"] = readCurrent();
+
+  serializeJson(doc, Serial);
+  Serial.println();
+}
+
+// 🔹 Enviar datos de temperatura y humedad en JSON
+void sendEnvironmentData() {
+  StaticJsonDocument<256> doc;
+  JsonArray updates = doc.createNestedArray("updates");
+  JsonObject update = updates.createNestedObject();
+  JsonObject source = update.createNestedObject("source");
+
+  source["label"] = "arduino-mini";
+  source["type"] = "sensor";
+  update["timestamp"] = millis();
+  JsonArray values = update.createNestedArray("values");
+
+  float temperature, humidity;
+  readEnvironment(temperature, humidity);
+
+  JsonObject tempObj = values.createNestedObject();
+  tempObj["path"] = "environment.inside.temperature";
+  tempObj["value"] = temperature + 273.15;
+
+  JsonObject humObj = values.createNestedObject();
+  humObj["path"] = "environment.inside.relativeHumidity";
+  humObj["value"] = humidity / 100.0;
+
+  serializeJson(doc, Serial);
+  Serial.println();
+}
+
+// ========================= LOOP PRINCIPAL =========================
+void setup() {
+  Serial.begin(115200);
+  dht.begin();
+}
+
+void loop() {
+  if (millis() - lastUpdate >= UPDATE_INTERVAL) {
+    sendBatteryData();
+    sendWaterTankData();
+    sendCurrentData();
+    sendEnvironmentData();
+    lastUpdate = millis();
+  }
+}
