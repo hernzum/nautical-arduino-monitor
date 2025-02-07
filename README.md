@@ -1,175 +1,154 @@
-# **Nautical Arduino Monitor**  
-📡 **Sistema de monitoreo para embarcaciones basado en Arduino y SignalK**  
+# **📜 README - Nautical Arduino Monitor**  
+
+## **📌 Descripción del Proyecto**
+**Nautical Arduino Monitor** es un sistema de monitoreo basado en **Arduino Mini** diseñado para **embarcarse en sistemas eléctricos de barcos**.  
+Este monitor permite **medir y reportar** los siguientes parámetros en **SignalK** en **formato JSON**:  
+✅ **Estado de baterías (Voltaje, Estado de Carga - SOC, Capacidad restante)**  
+✅ **Temperatura y humedad ambiental**  
+✅ **Nivel del tanque de agua dulce**  
+✅ **Consumo de corriente mediante un shunt de 300A/75mV**  
+✅ **Alarmas visuales y sonoras en caso de fallas críticas**  
+✅ **Pulsador para cambiar modos de operación y resetear alarmas**  
 
 ---
 
-## **📖 Descripción**  
-**Nautical Arduino Monitor** es un sistema integral de monitoreo diseñado para **embarcaciones** que permite la supervisión de parámetros críticos en tiempo real, tales como:  
-- **Estado de las baterías** (voltaje, estado de carga, capacidad restante).  
-- **Condiciones ambientales** (temperatura y humedad).  
-- **Nivel del tanque de agua dulce**.  
-- **Consumo eléctrico mediante un shunt de corriente**.  
-- **Detección de fugas de gas**.  
-- **Alertas visuales y sonoras mediante LEDs y buzzer**.  
-
-📡 **Conectividad:** El sistema envía los datos a **SignalK** a través de **puerto serial (UART, 115200 baud)**, permitiendo la visualización en sistemas de navegación y monitoreo marítimo.  
-
----
-
-## **📦 Requisitos de Hardware**  
-
-### **🔹 Microcontrolador Principal**  
-- **Arduino Mini / Nano / Uno** (cualquier modelo compatible con UART y ADC).  
-
-### **🔹 Sensores y Actuadores**  
-
-| **Componente**            | **Descripción**                                     | **Conexión a Arduino** |
-|---------------------------|-----------------------------------------------------|------------------------|
-| **DHT11 / DHT22**         | Sensor de temperatura y humedad                     | Pin 2                  |
-| **Sensores de Voltaje 0-25V** | Para medir voltajes de baterías (hasta 25V)   | A1, A2, A3             |
-| **Shunt de corriente (Opcional)** | Medición de consumo de energía             | A4                     |
-| **Sensor de Nivel de Agua** | Para medir el nivel del tanque de agua            | A0                     |
-| **Sensor de Gas MQ-2/MQ-6** | Detección de fugas de gas                        | A5                     |
-| **LED Verde**             | Estado Normal                                       | Pin 4                  |
-| **LED Amarillo**          | Advertencia                                        | Pin 5                  |
-| **LED Rojo**              | Alarma Crítica                                     | Pin 6                  |
-| **Buzzer**               | Alertas sonoras                                    | Pin 7                  |
-| **Pulsador**             | Cambio de modos / Reset de alarmas                 | Pin 3                  |
-
-📌 **Nota:** En sistemas de 24V, se pueden usar **divisores de voltaje** en sensores de voltaje 0-25V.  
+## **📌 Requerimientos de Hardware**
+🔹 **Microcontrolador:** Arduino Mini (3.3V)  
+🔹 **Sensores y componentes:**
+  - **Divisores de voltaje** (Resistencias **680kΩ y 80kΩ**) para medición de baterías  
+  - **Sensor de temperatura y humedad** (**DHT11**)  
+  - **Sensor de nivel de agua** (**Sensor resistivo conectado a A0**)  
+  - **Shunt de 300A/75mV** para medición de corriente  
+  - **Buzzer** para alarmas sonoras  
+  - **LEDs indicadores** (Verde, Amarillo, Rojo)  
+  - **Pulsador** para reset de alarmas y cambio de modo  
 
 ---
 
-## **🖥️ Instalación del Software**  
-### **1️⃣ Instalación de Arduino IDE**  
-Descargar e instalar **Arduino IDE** (versión 1.8.19 o superior):  
-🔗 [Descargar Arduino IDE](https://www.arduino.cc/en/software)  
+## **📌 Conexión de los Componentes**
+### **🔋 Conexión del Divisor de Voltaje para Baterías**
+Cada batería debe conectarse a su propio **divisor de voltaje** antes de ingresar al Arduino.  
+| **Batería** | **Arduino Mini** | **Resistencias (Divisor)** |
+|------------|----------------|--------------------------|
+| **Batería 1** | **A1** | R1 = 680kΩ, R2 = 80kΩ |
+| **Batería 2** | **A2** | R1 = 680kΩ, R2 = 80kΩ |
+| **Batería 3** | **A3** | R1 = 680kΩ, R2 = 80kΩ |
 
-### **2️⃣ Instalación de Librerías Necesarias**  
-Desde **Arduino IDE**:  
-1. Ir a **Sketch** → **Incluir Librería** → **Administrar Librerías**.  
-2. Buscar e instalar las siguientes librerías:  
+📌 **Importante:** Usa **resistencias de precisión (1% o menos)** para evitar errores en la medición.
 
-| **Librería**           | **Descripción**                                     | **Descarga** |
-|------------------------|-----------------------------------------------------|--------------|
-| **ArduinoJson**        | Serialización de datos en formato JSON             | [Descargar](https://github.com/bblanchon/ArduinoJson) |
-| **DHT Sensor Library** | Comunicación con sensores DHT11/DHT22              | [Descargar](https://github.com/adafruit/DHT-sensor-library) |
-| **Adafruit Unified Sensor** | Librería para sensores Adafruit              | [Descargar](https://github.com/adafruit/Adafruit_Sensor) |
+### **💧 Conexión del Sensor de Nivel de Agua**
+- **Salida del sensor** → **A0 (Arduino Mini)**  
+- **GND** → **GND (Arduino Mini)**  
+- **VCC (5V)** → **Alimentación del sensor**  
 
-### **3️⃣ Subir el Código a Arduino**  
-1. **Abrir el archivo** `nautical_monitor.ino`.  
-2. **Seleccionar la placa** (`Arduino Mini` o la correspondiente).  
-3. **Configurar el puerto serial** a **115200 baud**.  
-4. **Cargar el código en el microcontrolador**.  
-
----
-
-## **⚙️ Conexión de Sensores**
-### **🔹 1. Sensor DHT11/DHT22 (Temperatura y Humedad)**
-| **DHT Pin** | **Arduino Mini** |
-|------------|--------------|
-| **VCC**    | **5V** |
-| **GND**    | **GND** |
-| **DATA**   | **Pin 2** |
-
-📌 **DHT22 requiere una resistencia de 10kΩ entre VCC y DATA**.  
-
----
-
-### **🔹 2. Sensores de Voltaje 0-25V (Monitoreo de Baterías)**
-| **Sensor 0-25V** | **Arduino Mini** |
-|--------------|-------------|
-| **VCC**      | **5V** |
-| **GND**      | **GND** |
-| **OUT**      | **A1, A2, A3** |
-
-📌 **Cada sensor 0-25V mide hasta 25V y entrega una salida de 0-5V**.  
-
----
-
-### **🔹 3. Shunt de Corriente (Opcional)**
+### **⚡ Conexión del Shunt de 300A/75mV**
 | **Shunt** | **Arduino Mini** |
-|-----------|-------------|
-| **VCC**   | **5V** |
-| **GND**   | **GND** |
-| **OUT**   | **A4** |
+|-----------|-----------------|
+| **V+ (Lado de la batería)** | **A4 (Medición de voltaje)** |
+| **V- (Carga del sistema)** | **GND (Arduino Mini)** |
 
-📌 Se recomienda usar un **amplificador INA219** para mayor precisión.  
-
----
-
-### **🔹 4. Sensor de Nivel de Agua**
-| **Sensor** | **Arduino Mini** |
-|------------|-------------|
-| **VCC**    | **5V** |
-| **GND**    | **GND** |
-| **OUT**    | **A0** |
-
-📌 La medición se escala de **0-100%**.  
+📌 **Nota:**  
+- Si el valor de corriente es **negativo**, significa que la batería **se está cargando**.  
+- Si el valor de corriente es **positivo**, significa que la batería **se está descargando**.  
 
 ---
 
-### **🔹 5. Sensor de Gas MQ-2/MQ-6**
-| **Sensor** | **Arduino Mini** |
-|-----------|-------------|
-| **VCC**   | **5V** |
-| **GND**   | **GND** |
-| **OUT**   | **A5** |
+## **📌 Cálibración de Sensores**
+### **🔋 Cálibración de Baterías**
+Cada batería tiene un **factor de calibración individual** para corregir errores en la medición.  
 
-📌 Se ajusta un **umbral de detección en el código**.  
+1️⃣ **Mide el voltaje real de cada batería con un multímetro (tester).**  
+2️⃣ **Observa el voltaje que muestra el Arduino en el Monitor Serie.**  
+3️⃣ **Calcula el Factor de Calibración:**  
+   \[
+   \text{CALIBRATION_FACTOR} = \frac{\text{Voltaje real (multímetro)}}{\text{Voltaje Arduino}}
+   \]
+4️⃣ **Modifica los valores en el código:**  
+```cpp
+BatteryConfig batteries[3] = {
+  {BATTERY_1_PIN, 11.8, 12.6, 1.02},  // Batería 1 (Plomo-Ácido)
+  {BATTERY_2_PIN, 12.0, 14.6, 1.01},  // Batería 2 (Litio)
+  {BATTERY_3_PIN, 10.5, 12.5, 1.03}   // Batería 3 (AGM)
+};
+```
+5️⃣ **Carga el código y verifica si los valores coinciden.**  
+
+### **⚡ Cálibración del Shunt**
+1️⃣ **Usa un amperímetro externo para medir la corriente real.**  
+2️⃣ **Observa la corriente mostrada en el Monitor Serie del Arduino.**  
+3️⃣ **Calcula el Factor de Calibración:**  
+   \[
+   \text{SHUNT\_CALIBRATION} = \frac{\text{Corriente real (amperímetro)}}{\text{Corriente Arduino}}
+   \]
+4️⃣ **Modifica este valor en el código:**  
+```cpp
+const float SHUNT_CALIBRATION = 1.0;
+```
+5️⃣ **Recarga el código y prueba nuevamente.**  
 
 ---
 
-## **📡 Configuración de SignalK**
-1. **Instalar SignalK Server en ROCK 4C+**  
-   ```sh
-   curl -sSL https://get.signalk.org | sudo bash
-   ```
-2. **Conectar el Arduino Mini a ROCK 4C+** mediante USB/UART.  
-3. **Configurar el puerto serial en SignalK**:  
-   - **Abrir SignalK** (`http://localhost:3000`).  
-   - Ir a `Data Connections` → `Add Connection`.  
-   - **Seleccionar `Serial` y configurar:**  
-     - **Device:** `/dev/ttyUSB0` (o el que corresponda).  
-     - **Baud Rate:** `115200`.  
-   - Guardar y reiniciar SignalK.  
-
----
-
-## **📊 Datos Enviados a SignalK**
-El sistema envía datos en **JSON**, estructurados así:
-
-### **🔹 Datos de Baterías**
+## **📌 Formato de Datos Enviados a SignalK**
+Los datos se envían en **formato JSON** a través del puerto **Serial a 115200 baud**.  
+### **Ejemplo de Datos Enviados**
 ```json
 {
-  "updates": [{
-    "source": { "label": "arduino-mini", "type": "sensor" },
-    "timestamp": 12345678,
-    "values": [
-      { "path": "electrical.batteries.0.voltage", "value": 12.5 },
-      { "path": "electrical.batteries.0.stateOfCharge", "value": 0.8 }
-    ]
-  }]
+  "updates": [
+    {
+      "source": {
+        "label": "arduino-mini",
+        "type": "sensor"
+      },
+      "timestamp": 1678901234,
+      "values": [
+        {"path": "electrical.batteries.0.voltage", "value": 12.4},
+        {"path": "electrical.batteries.0.stateOfCharge", "value": 0.85},
+        {"path": "electrical.batteries.0.current", "value": 25.3},
+        {"path": "tanks.freshWater.0.currentLevel", "value": 0.65},
+        {"path": "environment.inside.temperature", "value": 298.15},
+        {"path": "environment.inside.relativeHumidity", "value": 0.55}
+      ]
+    }
+  ]
 }
 ```
-
-### **🔹 Datos Ambientales**
-```json
-{
-  "updates": [{
-    "source": { "label": "arduino-mini", "type": "sensor" },
-    "timestamp": 12345678,
-    "values": [
-      { "path": "environment.inside.temperature", "value": 293.15 },
-      { "path": "environment.inside.relativeHumidity", "value": 0.55 }
-    ]
-  }]
-}
-```
-
-📌 **Los datos se envían cada `5s`, con pausas de `100ms` entre bloques.**  
+📌 **Explicación:**  
+- `electrical.batteries.0.voltage` → Voltaje de la batería 1  
+- `electrical.batteries.0.stateOfCharge` → Estado de carga (SOC)  
+- `electrical.batteries.0.current` → Corriente en la batería 1 (A)  
+- `tanks.freshWater.0.currentLevel` → Nivel del tanque de agua (fracción 0-1)  
+- `environment.inside.temperature` → Temperatura en Kelvin  
+- `environment.inside.relativeHumidity` → Humedad relativa (0-1)  
 
 ---
 
-## **📬 Contacto y Soporte**
-Para dudas, mejoras o reportes de errores, abrir un **issue en GitHub** o contactar a **Hernzum**.  
+## **📌 Instalación y Uso**
+1️⃣ **Instala las librerías necesarias en el IDE de Arduino:**  
+```cpp
+#include <DHT.h>
+#include <ArduinoJson.h>
+```
+2️⃣ **Configura la conexión con SignalK a través del puerto serie:**  
+- Usa **115200 baud** en la configuración de entrada de SignalK.  
+- Asegúrate de que el Arduino Mini está correctamente conectado a la placa **Rock 4C+**.  
+
+3️⃣ **Carga el código en el Arduino Mini.**  
+4️⃣ **Abre el Monitor Serie y verifica las mediciones.**  
+5️⃣ **Conéctalo a SignalK y observa los datos en la interfaz web.**  
+
+---
+
+## **📌 Mejoras Implementadas en Esta Versión**
+✅ **Cada batería ahora tiene su propio voltaje máximo y mínimo** para calcular el SOC correctamente.  
+✅ **Ahora el código mide el consumo de corriente usando un shunt de 300A/75mV.**  
+✅ **Los datos de agua, temperatura y humedad ahora se envían correctamente a SignalK.**  
+✅ **El código es más modular y fácil de modificar.**  
+✅ **Se agregaron factores de calibración para baterías y shunt.**  
+
+📌 **👉 Ahora puedes probar el código en tu embarcación y verificar que SignalK reciba todos los datos correctamente.** 🚢⚡  
+
+---
+### **📌 Autor**
+**Desarrollado por:** Hernzum 🚢  
+**Versión:** 1.5 (Última actualización)  
+**Licencia:** Open Source 🚀
