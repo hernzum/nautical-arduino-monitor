@@ -6,7 +6,7 @@
  * - Cada batería tiene su propio voltaje máximo y mínimo para calcular el SOC.
  * - Mide temperatura, humedad y nivel del tanque de agua.
  * - Mide el consumo de corriente mediante un shunt de 300A/75mV en la batería 1.
- * - Genera alarmas con LEDs y buzzer en caso de fallas críticas.
+ * -TODO____ Genera alarmas con LEDs y buzzer en caso de fallas críticas. TODO
  * - Envía datos a SignalK en formato JSON por UART (115200 baud).
  */
 
