@@ -1,11 +1,11 @@
 /*
  * Nautical Arduino Monitor - Hernzum
- * Versión: 1.5
+ * Versión: 1.4
  * Descripción:
  * - Monitorea baterías con divisores de voltaje y calibración individual.
  * - Cada batería tiene su propio voltaje máximo y mínimo para calcular el SOC.
  * - Mide temperatura, humedad y nivel del tanque de agua.
- * - Mide el consumo de corriente mediante un shunt de 300A/75mV en la batería 1.
+ * - Mide el consumo de corriente mediante un shunt en la batería 1.
  * - Genera alarmas con LEDs y buzzer en caso de fallas críticas.
  * - Envía datos a SignalK en formato JSON por UART (115200 baud).
  */
@@ -50,7 +50,7 @@ const float R2 = 80000.0;
 const float VOLTAGE_DIVIDER_RATIO = (R1 + R2) / R2;
 
 // =========================== CONFIGURACIÓN DEL SHUNT ===========================
-const float SHUNT_RESISTANCE = 0.00025; // 300A/75mV → 0.00025Ω
+const float SHUNT_RESISTANCE = 0.00075;  // Ejemplo: 75mV @ 100A → 0.00075Ω
 const float SHUNT_CALIBRATION = 1.0;    // Factor de calibración para ajustar la lectura
 
 // Configuración del sensor DHT
@@ -90,9 +90,9 @@ float readCurrent() {
 
 // ========================= ENVÍO DE DATOS A SIGNALK =========================
 
-// 🔹 Enviar datos del consumo de corriente en JSON
-void sendCurrentData() {
-  StaticJsonDocument<256> doc;
+// 🔹 Enviar datos de baterías en JSON
+void sendBatteryData() {
+  StaticJsonDocument<512> doc;
   JsonArray updates = doc.createNestedArray("updates");
   JsonObject update = updates.createNestedObject();
   JsonObject source = update.createNestedObject("source");
@@ -102,24 +102,20 @@ void sendCurrentData() {
   update["timestamp"] = millis();
   JsonArray values = update.createNestedArray("values");
 
-  JsonObject currentObj = values.createNestedObject();
-  currentObj["path"] = "electrical.batteries.0.current"; // Batería 1
-  currentObj["value"] = readCurrent(); // Medición en Amperios
+  for (uint8_t i = 0; i < 3; i++) {
+    float voltage = readBatteryVoltage(batteries[i]);
+
+    JsonObject voltObj = values.createNestedObject();
+    voltObj["path"] = "electrical.batteries." + String(i) + ".voltage";
+    voltObj["value"] = voltage;
+
+    JsonObject socObj = values.createNestedObject();
+    socObj["path"] = "electrical.batteries." + String(i) + ".stateOfCharge";
+    socObj["value"] = calculateSOC(voltage, batteries[i].min_voltage, batteries[i].max_voltage) / 100.0;
+  }
 
   serializeJson(doc, Serial);
   Serial.println();
 }
 
-// ========================= LOOP PRINCIPAL =========================
-void setup() {
-  Serial.begin(115200);
-  dht.begin();
-  pinMode(BUZZER_PIN, OUTPUT);
-}
-
-void loop() {
-  if (millis() - lastUpdate >= UPDATE_INTERVAL) {
-    sendCurrentData(); // Enviar consumo de corriente
-    lastUpdate = millis();
-  }
-}
+// 🔹 Enviar datos del
