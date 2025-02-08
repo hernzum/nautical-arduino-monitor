@@ -1,7 +1,3 @@
-A continuación, te proporciono una versión optimizada del **README** original. He mejorado la estructura, eliminado redundancias y reorganizado la información para que sea más clara y profesional, manteniendo todos los detalles importantes.
-
----
-
 ### **README - Nautical Arduino Monitor**
 
 #### **📌 Descripción del Proyecto**
