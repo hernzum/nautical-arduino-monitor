@@ -18,7 +18,7 @@ set -euo pipefail
 # ======================== CONFIGURACIÓN ========================
 REPO_OWNER="hernzum"
 REPO_NAME="nautical-arduino-monitor"
-GITHUB_TOKEN="${GITHUB_TOKEN:-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}"
+GITHUB_TOKEN="TUTOKEN"
 PROJECT_DIR="/home/nito/nautical-arduino-monitor"  # Cambia si es diferente
 TARGET_BRANCH="main"
 LOG_FILE="$PROJECT_DIR/.github-check.log"
