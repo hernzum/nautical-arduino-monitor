@@ -1,0 +1,9 @@
+{
+  "name": "signalk-telebrambot",
+  "version": "1.0.0",
+  "main": "bot.js",
+  "dependencies": {
+    "ws": "^8.0.0",
+    "node-telegram-bot-api": "^0.65.0"
+  }
+}

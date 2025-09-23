@@ -1,0 +1,10 @@
+{
+  "signalkServer": "localhost",
+  "signalkPort": 3000,
+  "telegramToken": "TU_TOKEN_AQUI",
+  "chatId": "TU_CHAT_ID_AQUI",
+  "alarms": {
+    "lowBattery": 12.0,
+    "lowWater": 0.3
+  }
+}
