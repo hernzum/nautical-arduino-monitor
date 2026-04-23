@@ -2,6 +2,16 @@
 const signalKUrl = 'ws://localhost:3000/signalk/v1/stream?subscribe=none';
 const ws = new WebSocket(signalKUrl);
 
+// Cache DOM elements to avoid repeated queries
+const domElements = {};
+
+function cacheElement(id) {
+  if (!domElements[id]) {
+    domElements[id] = document.getElementById(id);
+  }
+  return domElements[id];
+}
+
 ws.onopen = () => {
   console.log("✅ Conectado a SignalK");
   ws.send(JSON.stringify({
@@ -17,6 +27,24 @@ ws.onopen = () => {
   }));
 };
 
+// Use requestAnimationFrame for batched DOM updates
+let pendingUpdates = {};
+let updateScheduled = false;
+
+function scheduleUpdate() {
+  if (!updateScheduled) {
+    updateScheduled = true;
+    requestAnimationFrame(() => {
+      Object.entries(pendingUpdates).forEach(([id, value]) => {
+        const el = cacheElement(id);
+        if (el) el.textContent = value;
+      });
+      pendingUpdates = {};
+      updateScheduled = false;
+    });
+  }
+}
+
 ws.onmessage = (event) => {
   try {
     const data = JSON.parse(event.data);
@@ -27,25 +55,26 @@ ws.onmessage = (event) => {
           const val = value.value;
 
           if (path === "electrical.batteries.0.voltage") {
-            document.getElementById("voltage0").textContent = val.toFixed(2);
+            pendingUpdates["voltage0"] = val.toFixed(2);
           }
           if (path === "electrical.batteries.0.stateOfCharge") {
-            document.getElementById("soc0").textContent = (val * 100).toFixed(1);
+            pendingUpdates["soc0"] = (val * 100).toFixed(1);
           }
           if (path === "tanks.freshWater.0.currentLevel") {
-            document.getElementById("water").textContent = (val * 100).toFixed(1);
+            pendingUpdates["water"] = (val * 100).toFixed(1);
           }
           if (path === "environment.inside.temperature") {
-            document.getElementById("temp").textContent = (val - 273.15).toFixed(1);
+            pendingUpdates["temp"] = (val - 273.15).toFixed(1);
           }
           if (path === "environment.inside.relativeHumidity") {
-            document.getElementById("humidity").textContent = (val * 100).toFixed(1);
+            pendingUpdates["humidity"] = (val * 100).toFixed(1);
           }
           if (path === "electrical.batteries.0.current") {
-            document.getElementById("current").textContent = val.toFixed(2);
+            pendingUpdates["current"] = val.toFixed(2);
           }
         });
       });
+      scheduleUpdate();
     }
   } catch (e) {
     console.error("❌ Error:", e);
